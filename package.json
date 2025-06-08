@@ -1,0 +1,45 @@
+{
+	"name": "server-template",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server.js",
+	"scripts": {
+		"dev": "nodemon --exec tsx src/server.ts",
+		"build": "tsc && tsc-alias",
+		"start": "node build/src/server.js",
+		"drizzle": "npx drizzle-kit generate && npx drizzle-kit migrate",
+		"generate": "npx drizzle-kit generate",
+		"migrate": "npx drizzle-kit migrate",
+		"push": "npx drizzle-kit push",
+		"pull": "npx drizzle-kit pull",
+		"studio": "npx drizzle-kit studio"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@paralleldrive/cuid2": "^2.2.2",
+		"chalk": "^5.4.1",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.7",
+		"drizzle-orm": "^0.39.3",
+		"express": "^4.21.2",
+		"express-session": "^1.18.1",
+		"fast-jwt": "^6.0.2",
+		"nodemailer": "^6.10.0",
+		"pg": "^8.13.1",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.0",
+		"@types/express-session": "^1.18.1",
+		"@types/nodemailer": "^6.4.17",
+		"@types/pg": "^8.11.11",
+		"drizzle-kit": "^0.30.4",
+		"tsc-alias": "^1.8.16",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.3",
+		"typescript-transform-paths": "^3.5.5"
+	},
+	"type": "module"
+}

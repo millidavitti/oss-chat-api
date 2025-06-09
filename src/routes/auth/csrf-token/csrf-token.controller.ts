@@ -24,6 +24,7 @@ export async function getCsrfTokenController(
 				csrf: {
 					token,
 				},
+				...req.session.ctx,
 			};
 			res.status(200).json({
 				status: "not-authenticated",

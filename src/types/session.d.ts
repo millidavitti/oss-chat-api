@@ -25,6 +25,7 @@ declare module "express-session" {
 			csrf?: {
 				token: string;
 			};
+			guest?: { id: string };
 			jobNotifications?: RunningJob[];
 		} & { [key: string]: any };
 	}

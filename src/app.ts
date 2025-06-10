@@ -5,6 +5,10 @@ import { MySessionStore } from "@model/auth/session-store";
 import { getEnvironmentValue } from "src/helpers/get-environment-value";
 import routes from "@routes/routes";
 import { handleControllerError } from "./middlewares/handle-controller-error";
+import { worker } from "@routes/api/v1/chat/components/worker";
+
+if (!worker?.isRunning()) worker?.run();
+else console.log("Worker is running");
 
 const app = express();
 app.use(

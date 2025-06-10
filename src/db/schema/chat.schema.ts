@@ -1,7 +1,8 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text } from "drizzle-orm/pg-core";
 import { userSchema } from "./user.schema";
 import { z } from "zod";
 import { guestSchema } from "./guest.schema";
+import { timestamps } from "src/helpers/timestamp";
 
 export const chatSchema = pgTable("chats", {
 	id: text().primaryKey().notNull(),
@@ -12,7 +13,7 @@ export const chatSchema = pgTable("chats", {
 		onDelete: "cascade",
 	}),
 	title: text().notNull().default("New Chat"),
-	...timestamp,
+	...timestamps,
 });
 
 export const ZodChat = z.object({

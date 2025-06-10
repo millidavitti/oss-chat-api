@@ -1,7 +1,13 @@
+import { db } from "@db/connect-db";
+import { guestSchema } from "@db/schema/guest.schema";
 import { createId } from "@paralleldrive/cuid2";
 import { NextFunction, Request, Response } from "express";
 
-export function authenticate(req: Request, _: Response, next: NextFunction) {
+export async function authenticate(
+	req: Request,
+	_: Response,
+	next: NextFunction,
+) {
 	if (req.session.user) next();
 	else if (req.session.ctx?.guest) next();
 	else {
@@ -9,6 +15,7 @@ export function authenticate(req: Request, _: Response, next: NextFunction) {
 		req.session.ctx = {
 			guest: { id: guestId },
 		};
+		await db.insert(guestSchema).values({ id: guestId });
 		next();
 	}
 }

@@ -1,5 +1,6 @@
 import { createChat } from "@model/chat/create-chat.model";
 import { NextFunction, Request, Response } from "express";
+import { queue } from "../components/queue";
 
 export async function createChatController(
 	req: Request,
@@ -7,10 +8,21 @@ export async function createChatController(
 	next: NextFunction,
 ) {
 	try {
-		console.log(req.session.ctx?.guest, req.body);
+		console.log(req.body);
+		const userId = req.session.user?.id || req.session.ctx?.guest?.id;
+		const chat = await createChat(userId, req.params.chatId);
 
-		const chat = await createChat(req.session.ctx!.guest!.id, req.body.chatId);
-		res.status(200).json({ status: "authenticated", chat });
+		await queue.add("ai-response-queue", {
+			userMessage: req.body.userMessage,
+			chatId: req.params.chatId,
+			model: "gpt-4.1-mini",
+			guestId: req.session.ctx!.guest!.id || null,
+			userId: req.session.user?.id || null,
+		});
+
+		if (req.session.user)
+			res.status(200).json({ status: "authenticated", data: { chat } });
+		else res.status(200).json({ status: "not-authenticated", data: { chat } });
 	} catch (error) {
 		next(
 			Object.assign(error as any, {

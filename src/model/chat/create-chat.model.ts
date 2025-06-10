@@ -4,10 +4,12 @@ import { generateErrorLog } from "src/helpers/generate-error-log";
 
 export async function createChat(userId: string, chatId: string) {
 	try {
-		await db
-			.insert(chatSchema)
-			.values({ id: chatId, guestId: userId })
-			.returning();
+		return (
+			await db
+				.insert(chatSchema)
+				.values({ id: chatId, guestId: userId })
+				.returning()
+		)[0];
 	} catch (error) {
 		generateErrorLog("create-chat", error);
 	}

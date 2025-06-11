@@ -1,6 +1,6 @@
 import { createChat } from "@model/chat/create-chat.model";
-import { NextFunction, Request, Response } from "express";
 import { queue } from "../components/queue";
+import { NextFunction, Request, Response } from "express";
 
 export async function createChatController(
 	req: Request,

@@ -1,7 +1,5 @@
-import { db } from "@db/connect-db";
-import { chatMessageSchema } from "@db/schema/chat-message.schema";
-import { sendChatMessage } from "@model/chat/send-chat-message.model";
 import { NextFunction, Request, Response } from "express";
+import { queue } from "../components/queue";
 
 export async function sendChatMessageController(
 	req: Request,
@@ -9,34 +7,16 @@ export async function sendChatMessageController(
 	next: NextFunction,
 ) {
 	try {
-		const aiResponse = await sendChatMessage(req.body.userMessage);
+		console.log(req.session);
+		await queue.add("ai-response-queue", {
+			userMessage: req.body.userMessage,
+			chatId: req.params.chatId,
+			model: "gpt-4.1-mini",
+			guestId: req.session.ctx!.guest!.id || null,
+			userId: req.session.user?.id || null,
+		});
 
-		if (req.session.user) res.status(200).json({ status: "authenticated" });
-		else {
-			const chatHistory = await db
-				.insert(chatMessageSchema)
-				.values([
-					{
-						chatId: req.params.chatId,
-						type: "user",
-						guestId: req.session.ctx?.guest?.id,
-						content: req.body.userMessage,
-						status: "completed",
-					},
-					{
-						chatId: req.params.chatId,
-						type: "ai",
-						guestId: req.session.ctx?.guest?.id,
-						content: aiResponse,
-						status: "completed",
-					},
-				])
-				.returning();
-
-			res
-				.status(200)
-				.json({ status: "not-authenticated", data: { chatHistory } });
-		}
+		res.status(200);
 	} catch (error) {
 		next(
 			Object.assign(error as any, {

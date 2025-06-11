@@ -32,68 +32,63 @@ if (!worker)
 					model,
 					stream: true,
 				});
-				const chatMessageId = createId();
+				const aiMessageId = createId();
+				let buffer = "";
 				for await (const event of stream) {
 					if (event.type === "response.output_text.delta") {
-						// Save response stream to db
+						// Save ai response stream to db
+						buffer += event.delta;
+
+						if (buffer.length < 200) continue;
+
 						const [chatMessage] = await db
 							.insert(chatMessageSchema)
 							.values({
-								id: chatMessageId,
+								id: aiMessageId,
 								chatId,
 								type: "ai",
-								content: "",
+								content: buffer,
 								guestId,
 								userId,
 							})
 							.onConflictDoUpdate({
 								target: chatMessageSchema.id,
 								set: {
-									content: sql`${chatMessageSchema.content} || ${event.delta}`,
+									content: sql`${chatMessageSchema.content} || ${buffer}`,
 								},
 							})
 							.returning();
 
-						// Stream response to client optimistically
-						await pub.publish(
-							chatId,
-							JSON.stringify({
-								chunk: event.delta,
-								chatId,
-								chatMessage,
-								status: "completed",
-							}),
-						);
+						// Stream ai response to client optimistically
+						await pub.publish(chatId, JSON.stringify(chatMessage));
+						buffer = "";
 					} else if (event.type === "response.completed") {
 						// Update ai response status
-						await db
+						const [chatMessage] = await db
 							.update(chatMessageSchema)
 							.set({
-								status: "compeleted",
+								status: "completed",
+								content: sql`${chatMessageSchema.content} || ${buffer}`,
 							})
-							.where(eq(chatMessageSchema.id, chatMessageId));
+							.where(eq(chatMessageSchema.id, aiMessageId))
+							.returning();
 
 						// Notify the client on the status
-						await pub.publish(
-							chatId,
-							JSON.stringify({ status: "completed", chatId }),
-						);
+						await pub.publish(chatId, JSON.stringify(chatMessage));
 					} else if (event.type === "response.failed") {
-						await db
+						const [chatMessage] = await db
 							.update(chatMessageSchema)
 							.set({
 								status: "error",
 							})
-							.where(eq(chatMessageSchema.id, chatMessageId));
+							.where(eq(chatMessageSchema.id, aiMessageId))
+							.returning();
 
-						await pub.publish(
-							chatId,
-							JSON.stringify({ status: "error", chatId }),
-						);
+						await pub.publish(chatId, JSON.stringify(chatMessage));
 					}
 				}
 			} catch (error) {
-				generateErrorLog("send-chat-message", error);
+				generateErrorLog("ai-response-queue-worker", error);
 			}
 		},
 		{

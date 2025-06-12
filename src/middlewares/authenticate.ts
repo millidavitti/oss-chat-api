@@ -15,7 +15,11 @@ export async function authenticate(
 		req.session.ctx = {
 			guest: { id: guestId },
 		};
-		await db.insert(guestSchema).values({ id: guestId });
-		next();
+		try {
+			await db.insert(guestSchema).values({ id: guestId });
+			next();
+		} catch (error) {
+			next(error);
+		}
 	}
 }

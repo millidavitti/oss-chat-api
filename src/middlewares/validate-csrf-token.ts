@@ -15,7 +15,8 @@ export function validateCsrfToken(
 		| undefined;
 
 	if (!storedHash || !receivedRawToken) {
-		return res.status(403).json({ error: "csrf-token-missing" });
+		res.status(403).json({ error: "csrf-token-missing" });
+		return;
 	}
 
 	try {
@@ -28,7 +29,8 @@ export function validateCsrfToken(
 			storedBuf.length !== receivedBuf.length ||
 			!timingSafeEqual(storedBuf, receivedBuf)
 		) {
-			return res.status(403).json({ error: "csrf-token-mismatch" });
+			res.status(403).json({ error: "csrf-token-mismatch" });
+			return;
 		}
 
 		res.on("finish", () => {
@@ -37,6 +39,7 @@ export function validateCsrfToken(
 
 		next();
 	} catch (err) {
-		return res.status(403).json({ error: "csrf-token-mismatch" });
+		res.status(403).json({ error: "csrf-token-mismatch" });
+		return;
 	}
 }

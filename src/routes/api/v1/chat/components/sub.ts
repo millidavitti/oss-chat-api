@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Redis } from "ioredis";
+import { generateErrorLog } from "src/helpers/generate-error-log";
 export const chatSubscription = new Map<string, [Request, Response]>();
 
 export const sub = new Redis({
@@ -9,10 +10,14 @@ export const sub = new Redis({
 });
 
 sub.on("message", (_, message) => {
-	const { chatId } = JSON.parse(message);
-	const [, res] = chatSubscription.get(chatId)!;
-	if (res.writableEnded) return;
-	res.write(`data: ${message}\n\n`, (error) => {
-		if (error) console.log(error);
-	});
+	try {
+		const { chatId } = JSON.parse(message);
+		const [, res] = chatSubscription.get(chatId)!;
+		if (res.writableEnded) return;
+		res.write(`data: ${message}\n\n`, (error) => {
+			if (error) console.log(error);
+		});
+	} catch (error) {
+		generateErrorLog("Sub", error, "slient");
+	}
 });

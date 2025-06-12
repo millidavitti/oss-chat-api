@@ -13,7 +13,7 @@ export async function createChatController(
 		const chat = await createChat(userId, req.params.chatId);
 
 		await queue.add("ai-response-queue", {
-			userMessage: req.body.userMessage,
+			prompt: req.body.prompt,
 			chatId: req.params.chatId,
 			model: "gpt-4.1-mini",
 			guestId: req.session.ctx!.guest!.id || null,

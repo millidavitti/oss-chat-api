@@ -7,12 +7,11 @@ export async function sendChatMessageController(
 	next: NextFunction,
 ) {
 	try {
-		console.log(req.session);
 		await queue.add("ai-response-queue", {
-			userMessage: req.body.userMessage,
+			prompt: req.body.prompt,
 			chatId: req.params.chatId,
 			model: "gpt-4.1-mini",
-			guestId: req.session.ctx!.guest!.id || null,
+			guestId: req.session.ctx?.guest?.id || null,
 			userId: req.session.user?.id || null,
 		});
 

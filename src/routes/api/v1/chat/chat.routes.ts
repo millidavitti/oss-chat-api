@@ -5,6 +5,7 @@ import { aiResponseController } from "./controllers/ai-response.controller";
 import { getChatMessagesController } from "./controllers/get-chat-messages.controller";
 import { getChatsController } from "./controllers/get-chats.controller";
 import { deleteChatController } from "./controllers/delete-chat.controller";
+import { renameChatController } from "./controllers/rename-chat.controller";
 const chatRoutes = Router();
 
 chatRoutes.post("/create-chat/:chatId", createChatController);
@@ -13,5 +14,6 @@ chatRoutes.get("/ai-response/:chatId", aiResponseController);
 chatRoutes.get("/get-chat-messages/:chatId", getChatMessagesController);
 chatRoutes.get("/get-chats/:userId", getChatsController);
 chatRoutes.delete("/delete-chat/:chatId", deleteChatController);
+chatRoutes.post("/rename-chat/:chatId", renameChatController);
 
 export default chatRoutes;

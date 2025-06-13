@@ -8,6 +8,12 @@ export const aiModels = {
 		apiVersion: "2025-03-01-preview",
 		azureADTokenProvider,
 	} as AzureClientOptions,
+	"gpt-4.1": {
+		endpoint: process.env.OPENAI_ENDPOINT,
+		deployment: "gpt-4.1",
+		apiVersion: "2025-03-01-preview",
+		azureADTokenProvider,
+	} as AzureClientOptions,
 };
 
-export type Models = keyof typeof aiModels;
+export type Model = keyof typeof aiModels;

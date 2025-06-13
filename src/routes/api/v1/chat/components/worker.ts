@@ -1,6 +1,6 @@
 import { Job, Worker } from "bullmq";
 import { redis } from "./redis";
-import { aiModels, Models } from "@model/chat/ai-models";
+import { aiModels, Model } from "@model/chat/ai-models";
 import { generateErrorLog } from "src/helpers/generate-error-log";
 import { llm } from "./llm";
 import { pub } from "./pub";
@@ -10,6 +10,8 @@ import { and, eq, sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { chatSchema } from "@db/schema/chat.schema";
 import { renameChat } from "@model/chat/rename-chat.model";
+import { chatSubscription } from "./sub";
+import { getErrorMessage } from "src/helpers/get-error-message";
 export let worker: null | Worker = null;
 
 if (!worker)
@@ -19,7 +21,6 @@ if (!worker)
 			const { chatId, model, prompt, guestId, userId } = job.data;
 
 			try {
-				// await db.transaction(async (db) => {
 				let buffer = "";
 				const aiMessageId = createId();
 				// Save user message to db
@@ -31,7 +32,6 @@ if (!worker)
 						content: prompt,
 						guestId,
 						userId,
-						status: "pending",
 					})
 					.returning();
 
@@ -80,6 +80,7 @@ if (!worker)
 							})
 							.where(eq(chatMessageSchema.id, aiMessageId))
 							.returning();
+
 						await db
 							.update(chatMessageSchema)
 							.set({
@@ -93,7 +94,7 @@ if (!worker)
 							chatId,
 							JSON.stringify({ aiMessage, userMessage, chatId }),
 						);
-						job.updateData({
+						await job.updateData({
 							...job.data,
 							aiMessage: aiMessage as ChatMessage,
 							userMessage: userMessage as ChatMessage,
@@ -108,13 +109,13 @@ if (!worker)
 							.returning();
 						await pub.publish(
 							chatId,
-							JSON.stringify({ aiMessage, userMessage }),
+							JSON.stringify({ aiMessage, userMessage, chatId }),
 						);
 					}
 				}
-
-				// });
 			} catch (error) {
+				const [, res] = chatSubscription.get(chatId)!;
+				res.status(400).json({ error: getErrorMessage(error) });
 				generateErrorLog("ai-response-queue-worker", error);
 			}
 		},
@@ -150,7 +151,7 @@ worker.on("completed", async (job: Job<ChatJob>) => {
 export type ChatJob = {
 	prompt: string;
 	chatId: string;
-	model: Models;
+	model: Model;
 	guestId: string | null;
 	userId: string | null;
 	aiMessage?: ChatMessage;

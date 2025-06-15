@@ -4,13 +4,10 @@ import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
 
 export const userSchema = pgTable("users", {
-	id: text()
-		.primaryKey()
-		.notNull()
-		.$defaultFn(() => createId()),
-	firstName: text("first_name").notNull(),
-	lastName: text("last_name").notNull(),
-	email: text("email").unique().notNull(),
+	id: text().primaryKey().notNull(),
+	firstName: text("first_name"),
+	lastName: text("last_name"),
+	email: text("email").unique(),
 	emailVerified: boolean("email_verified").default(false).notNull(),
 	linkOauthAccounts: boolean("link_oauth_accounts").default(false).notNull(),
 	picture: text("picture"),

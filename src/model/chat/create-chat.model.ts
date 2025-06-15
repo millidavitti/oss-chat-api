@@ -7,7 +7,7 @@ export async function createChat(userId: string, chatId: string) {
 		return (
 			await db
 				.insert(chatSchema)
-				.values({ id: chatId, guestId: userId })
+				.values({ id: chatId, userId: userId })
 				.returning()
 		)[0];
 	} catch (error) {

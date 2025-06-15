@@ -19,7 +19,7 @@ if (!worker)
 	worker = new Worker(
 		"ai-response-queue",
 		async (job: Job<ChatJob>) => {
-			const { chatId, model, prompt, guestId, userId } = job.data;
+			const { chatId, model, prompt, userId } = job.data;
 
 			try {
 				let buffer = "";
@@ -31,7 +31,6 @@ if (!worker)
 						chatId,
 						type: "user",
 						content: prompt,
-						guestId,
 						userId,
 					})
 					.returning();
@@ -41,7 +40,6 @@ if (!worker)
 					chatId,
 					type: "ai",
 					content: buffer,
-					guestId,
 					userId,
 				});
 
@@ -71,7 +69,6 @@ if (!worker)
 				console.log("Streaming Response...");
 
 				for await (const event of stream) {
-					console.log(event);
 					if (event.type === "response.output_text.delta") {
 						buffer += event.delta;
 
@@ -177,8 +174,7 @@ export type ChatJob = {
 	prompt: string;
 	chatId: string;
 	model: Model;
-	guestId: string | null;
-	userId: string | null;
+	userId: string;
 	aiMessage?: ChatMessage;
 	userMessage?: ChatMessage;
 };

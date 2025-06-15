@@ -30,6 +30,7 @@ export async function signUpController(
 			);
 			if (status === "sent")
 				req.session.ctx = {
+					...req.session.ctx,
 					signUp: {
 						emailVerification: {
 							token,

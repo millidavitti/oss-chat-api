@@ -12,8 +12,7 @@ export async function sendChatMessageController(
 			prompt: req.body.prompt,
 			chatId: req.params.chatId,
 			model: req.body.model,
-			guestId: req.session.ctx?.guest?.id || null,
-			userId: req.session.user?.id || null,
+			userId: req.session.user?.id || req.session.ctx!.guest!.id,
 		});
 
 		res.status(200);

@@ -6,12 +6,13 @@ import { llm } from "./llm";
 import { pub } from "./pub";
 import { db } from "@db/connect-db";
 import { ChatMessage, chatMessageSchema } from "@db/schema/chat-message.schema";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { chatSchema } from "@db/schema/chat.schema";
 import { renameChat } from "@model/chat/rename-chat.model";
 import { chatSubscription } from "./sub";
 import { getErrorMessage } from "src/helpers/get-error-message";
+import { ResponseInput } from "openai/resources/responses/responses.mjs";
 export let worker: null | Worker = null;
 
 if (!worker)
@@ -44,13 +45,33 @@ if (!worker)
 					userId,
 				});
 
+				const messages = (
+					await db
+						.select({
+							content: chatMessageSchema.content,
+							type: chatMessageSchema.type,
+						})
+						.from(chatMessageSchema)
+						.where(eq(chatMessageSchema.chatId, chatId))
+						.orderBy(desc(chatMessageSchema.createdAt))
+						.limit(30)
+				).map((message) => ({
+					role: message.type === "ai" ? "assistant" : "user",
+					content: message.content,
+				}));
+				console.log("Generating Response...");
 				const stream = await llm(aiModels[model]).responses.create({
-					input: prompt,
+					input: [
+						...messages,
+						{ content: prompt, role: "user" },
+					] as ResponseInput,
 					model,
 					stream: true,
 				});
+				console.log("Streaming Response...");
 
 				for await (const event of stream) {
+					console.log(event);
 					if (event.type === "response.output_text.delta") {
 						buffer += event.delta;
 
@@ -70,7 +91,10 @@ if (!worker)
 							JSON.stringify({ aiMessage, userMessage, chatId }),
 						);
 						buffer = "";
-					} else if (event.type === "response.completed") {
+					} else if (
+						event.type === "response.completed" ||
+						event.type === "response.incomplete"
+					) {
 						// Update ai response status
 						const [aiMessage] = await db
 							.update(chatMessageSchema)
@@ -113,6 +137,7 @@ if (!worker)
 						);
 					}
 				}
+				console.log("Done Streaming");
 			} catch (error) {
 				const [, res] = chatSubscription.get(chatId)!;
 				res.status(400).json({ error: getErrorMessage(error) });

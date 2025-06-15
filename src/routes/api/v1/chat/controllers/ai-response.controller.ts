@@ -27,6 +27,7 @@ export async function aiResponseController(
 		chatSubscription.set(req.params.chatId, [req, res]);
 
 		res.on("close", async () => {
+			console.log("closed");
 			await sub.unsubscribe(req.params.chatId);
 			chatSubscription.delete(req.params.chatId);
 			res.end();

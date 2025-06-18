@@ -23,6 +23,7 @@ export async function signInController(
 				const status = await sendMagicLink(signInCredentials.email, token);
 				if (status === "sent") {
 					req.session.ctx = {
+						...req.session.ctx,
 						signIn: {
 							token,
 							expires: Date.now() + 1000 * 60 * 60 * 0.25,

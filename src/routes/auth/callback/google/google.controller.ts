@@ -45,17 +45,11 @@ export async function googleController(req: Request, res: Response) {
 					`${process.env.ORIGIN!}/auth/sign-in?status=not-authenticated`,
 				);
 		} else if (user) {
-			if (user.linkOauthAccounts) {
-				req.session.user = user;
-				res.redirect(
-					302,
-					`${process.env.ORIGIN!}/auth/sign-in?status=authenticated`,
-				);
-			} else
-				res.redirect(
-					302,
-					`${process.env.ORIGIN!}/auth/sign-in?status=not-linked`,
-				);
+			req.session.user = user;
+			res.redirect(
+				302,
+				`${process.env.ORIGIN!}/auth/sign-in?status=authenticated`,
+			);
 		} else {
 			const user = await signUpWithGoogle(req.session.ctx?.guest?.id!, profile);
 			req.session.user = user;

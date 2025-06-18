@@ -52,13 +52,14 @@ if (!worker)
 						.from(chatMessageSchema)
 						.where(eq(chatMessageSchema.chatId, chatId))
 						.orderBy(desc(chatMessageSchema.createdAt))
-						.limit(30)
+						.limit(60)
 				).map((message) => ({
 					role: message.type === "ai" ? "assistant" : "user",
 					content: message.content,
 				}));
 				console.log("Generating Response...");
 				const stream = await llm(aiModels[model]).responses.create({
+					instructions,
 					input: [
 						...messages,
 						{ content: prompt, role: "user" },
@@ -93,22 +94,23 @@ if (!worker)
 						event.type === "response.incomplete"
 					) {
 						// Update ai response status
-						const [aiMessage] = await db
-							.update(chatMessageSchema)
-							.set({
-								status: "completed",
-								content: sql`${chatMessageSchema.content} || ${buffer}`,
-							})
-							.where(eq(chatMessageSchema.id, aiMessageId))
-							.returning();
+						const [[aiMessage]] = await Promise.all([
+							db
+								.update(chatMessageSchema)
+								.set({
+									status: "completed",
+									content: sql`${chatMessageSchema.content} || ${buffer}`,
+								})
+								.where(eq(chatMessageSchema.id, aiMessageId))
+								.returning(),
 
-						await db
-							.update(chatMessageSchema)
-							.set({
-								status: "completed",
-							})
-							.where(eq(chatMessageSchema.id, userMessage.id))
-							.returning();
+							db
+								.update(chatMessageSchema)
+								.set({
+									status: "completed",
+								})
+								.where(eq(chatMessageSchema.id, userMessage.id)),
+						]);
 
 						// Notify the client on the status
 						await pub.publish(
@@ -178,3 +180,18 @@ export type ChatJob = {
 	aiMessage?: ChatMessage;
 	userMessage?: ChatMessage;
 };
+
+const instructions = `You are a conversational AI assistant designed to hold natural, coherent, and contextually relevant conversations with a user. The user may provide a history of the conversation. 
+
+Your objectives:
+- Maintain continuity and context from the conversation history.
+- Reference prior user messages naturally when relevant.
+- Avoid repeating yourself unless clarification is needed.
+- Use concise, informative, and human-like responses.
+- If a question has already been answered earlier in the conversation, refer to the prior response instead of repeating it verbatim.
+- Do not hallucinate. If you don't have enough information from the history, ask a clarifying question.
+- Be aware of the tone and emotional state of the user if detectable from history, and respond accordingly.
+- When the context shifts, recognize the change and adapt your responses to the new topic without dragging in irrelevant history.
+
+Each interaction is a sequence of user and assistant messages. Always assume the most recent user message is the one requiring your response, and previous messages are context.
+`;

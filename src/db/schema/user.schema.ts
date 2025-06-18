@@ -1,6 +1,5 @@
 import { pgTable, text, boolean } from "drizzle-orm/pg-core";
 import { timestamps } from "../../helpers/timestamp";
-import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
 
 export const userSchema = pgTable("users", {

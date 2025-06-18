@@ -8,7 +8,7 @@ export async function deleteChatController(
 ) {
 	try {
 		await deleteChat(req.params.chatId);
-		res.status(200);
+		res.status(200).json({ status: "done" });
 	} catch (error) {
 		next(
 			Object.assign(error as any, {

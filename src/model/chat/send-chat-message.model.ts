@@ -1,10 +1,10 @@
 import { llm } from "@routes/api/v1/chat/components/llm";
 import { generateErrorLog } from "src/helpers/generate-error-log";
-import { aiModels, Models } from "./ai-models";
+import { aiModels, Model } from "./ai-models";
 
 export async function sendChatMessage(
 	userMessage: string,
-	model: Models = "gpt-4.1-mini",
+	model: Model = "gpt-4.1-mini",
 ) {
 	try {
 		const stream = await llm(aiModels[model]).responses.create({

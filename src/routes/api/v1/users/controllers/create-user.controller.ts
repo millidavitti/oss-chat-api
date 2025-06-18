@@ -7,7 +7,7 @@ export async function createUserController(
 	next: NextFunction,
 ) {
 	try {
-		const user = await createUser(req.body);
+		const user = await createUser(req.session.ctx!.guest!.id, req.body);
 		res.status(200).json({ success: true, user });
 	} catch (error) {
 		next(

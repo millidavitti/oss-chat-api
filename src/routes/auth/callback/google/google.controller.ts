@@ -42,22 +42,16 @@ export async function googleController(req: Request, res: Response) {
 			} else
 				res.redirect(
 					302,
-					`${process.env.ORIGIN!}/auth/oauth?status=not-authenticated`,
+					`${process.env.ORIGIN!}/auth/sign-in?status=not-authenticated`,
 				);
 		} else if (user) {
-			if (user.linkOauthAccounts) {
-				req.session.user = user;
-				res.redirect(
-					302,
-					`${process.env.ORIGIN!}/auth/oauth?status=authenticated`,
-				);
-			} else
-				res.redirect(
-					302,
-					`${process.env.ORIGIN!}/auth/oauth?status=not-linked`,
-				);
+			req.session.user = user;
+			res.redirect(
+				302,
+				`${process.env.ORIGIN!}/auth/sign-in?status=authenticated`,
+			);
 		} else {
-			const user = await signUpWithGoogle(profile);
+			const user = await signUpWithGoogle(req.session.ctx?.guest?.id!, profile);
 			req.session.user = user;
 			res.redirect(
 				302,
@@ -69,7 +63,7 @@ export async function googleController(req: Request, res: Response) {
 
 		res.redirect(
 			302,
-			`${process.env.ORIGIN!}/auth/oauth?status=not-authenticated`,
+			`${process.env.ORIGIN!}/auth/sign-in?status=not-authenticated`,
 		);
 	}
 }

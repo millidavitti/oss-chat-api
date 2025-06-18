@@ -9,13 +9,11 @@ export async function pingController(
 		if (req.session.user)
 			res.status(200).json({
 				user: req.session.user,
-				jobNotifications: req.session.ctx?.jobNotifications || [],
 				isAuthenticated: true,
 			});
 		else
 			res.status(200).json({
 				guest: req.session.ctx?.guest,
-				jobNotifications: req.session.ctx?.jobNotifications || [],
 				isAuthenticated: false,
 			});
 	} catch (error) {

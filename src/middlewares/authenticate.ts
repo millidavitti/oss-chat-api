@@ -1,5 +1,5 @@
 import { db } from "@db/connect-db";
-import { guestSchema } from "@db/schema/guest.schema";
+import { userSchema } from "@db/schema/user.schema";
 import { createId } from "@paralleldrive/cuid2";
 import { NextFunction, Request, Response } from "express";
 
@@ -16,7 +16,7 @@ export async function authenticate(
 			guest: { id: guestId },
 		};
 		try {
-			await db.insert(guestSchema).values({ id: guestId });
+			await db.insert(userSchema).values({ id: guestId });
 			next();
 		} catch (error) {
 			next(error);

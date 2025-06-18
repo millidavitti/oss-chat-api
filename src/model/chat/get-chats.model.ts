@@ -8,7 +8,7 @@ export async function getChats(userId: string) {
 		return await db
 			.select()
 			.from(chatSchema)
-			.where(eq(chatSchema.guestId, userId))
+			.where(eq(chatSchema.userId, userId))
 			.orderBy(desc(chatSchema.updatedAt), desc(chatSchema.createdAt));
 	} catch (error) {
 		generateErrorLog("get-chats", error);

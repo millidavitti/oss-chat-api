@@ -7,7 +7,6 @@ import { userSchema } from "./user.schema";
 import { timestamps } from "src/helpers/timestamp";
 import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
-import { guestSchema } from "./guest.schema";
 
 export const chatMessageSchema = pgTable(
 	"chat_messages",
@@ -18,12 +17,11 @@ export const chatMessageSchema = pgTable(
 		chatId: text("chat_id")
 			.references(() => chatSchema.id, { onDelete: "cascade" })
 			.notNull(),
-		userId: text("user_id").references(() => userSchema.id, {
-			onDelete: "cascade",
-		}),
-		guestId: text("guest_id").references(() => guestSchema.id, {
-			onDelete: "cascade",
-		}),
+		userId: text("user_id")
+			.references(() => userSchema.id, {
+				onDelete: "cascade",
+			})
+			.notNull(),
 		type: text().notNull(),
 		content: text().notNull().default(""),
 		status: text().notNull().default("pending"),
@@ -41,8 +39,7 @@ export const chatMessageSchema = pgTable(
 export const ZodChatMessage = z.object({
 	id: z.string(),
 	chatId: z.string(),
-	userId: z.string().nullable().optional(),
-	guestId: z.string().nullable().optional(),
+	userId: z.string(),
 	type: z.enum(["user", "ai"]),
 	content: z.string(),
 	status: z.enum(["pending", "completed", "error"]),

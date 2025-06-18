@@ -15,7 +15,10 @@ export async function verifyEmailController(
 		const { verificationToken } = req.params;
 
 		if (isTokenValid(token === verificationToken ? token : "", expires)) {
-			const user = await createUser(signUpCredentials);
+			const user = await createUser(
+				req.session.ctx!.guest!.id,
+				signUpCredentials,
+			);
 			if (user) {
 				req.session.user = user;
 				req.session.ctx = {};
